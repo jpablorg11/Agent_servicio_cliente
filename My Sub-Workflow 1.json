@@ -1,0 +1,294 @@
+{
+  "name": "My Sub-Workflow 1",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "nombre"
+            },
+            {
+              "name": "apellido"
+            },
+            {
+              "name": "empresa"
+            },
+            {
+              "name": "cargo"
+            },
+            {
+              "name": "telefono"
+            },
+            {
+              "name": "producto"
+            },
+            {
+              "name": "email"
+            },
+            {
+              "name": "ciudad"
+            },
+            {
+              "name": "obra"
+            },
+            {
+              "name": "cantidad",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "Escala trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        272,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6ecb5ba3-0688-4957-b49b-9f56f5039565",
+              "leftValue": "={{ $json.items }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        928,
+        272
+      ],
+      "id": "71a159fa-00d2-41c6-aa60-30ba501f1107",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "=https://public-api.escala.com/v1/crm/contacts?email={{ $json.email }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        720,
+        272
+      ],
+      "id": "245a1972-9931-4b63-8fe5-a84f8c28cbc6",
+      "name": "Existe el Contacto",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "KKyjslJAGjjt3vHr",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://public-api.escala.com/v1/crm/contacts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"assignedTo\": \"coordinadorcomercial@sulink.co\",\n  \"company\": {\n    \"industryType\": \"construction\",\n    \"name\": \"{{ $json.empresa }}\"\n  },\n  \"contacted\": true,\n  \"marketable\": true,\n  \"personal\": {\n    \"email\": \"{{ $json.email }}\",\n    \"firstName\": \"{{ $json.nombre }}\",\n    \"jobTitle\": \"{{ $json.cargo }}\",\n    \"lastName\": \"{{ $json.apellido }}\"\n  },\n  \"priority\": 0,\n  \"triggerWorkflow\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1200,
+        224
+      ],
+      "id": "3574eb24-e7de-4392-9522-523313f91705",
+      "name": "Crea el contacto",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "8rA8o2ZXOBugS3gi",
+          "name": "Escala Bearer Auth account"
+        },
+        "httpHeaderAuth": {
+          "id": "KKyjslJAGjjt3vHr",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://public-api.escala.com/v1/crm/deals",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"assignedTo\": \"coordinadorcomercial@sulink.co\",\n  \"contactId\": \"{{ $json.id || $json.data[0].id }}\",\n  \"custom\": {\n    \"items.custom.cf_deal_ciudad_ffhp_text\": \"{{ $('Escala trigger').item.json.ciudad }}\",\n    \"items.custom.cf_deal_inicio_emkx_date\": \"{{ $today }}\",\n  },\n  \"name\": \"{{ $('Escala trigger').item.json.obra }}\",\n  \"pipelineId\": \"01056e75-2083-11f0-89b3-7555b0ea83f4\",\n  \"priority\": 0,\n  \"products\": {\n    \"items\": [\n      {\n        \"productId\": \"bc03c591-dba8-11f0-8498-b3450ef37188\",\n        \"quantity\": {{ $('Escala trigger').item.json.cantidad }}\n      }\n    ],\n    \"updateValue\": false\n  },\n  \"stageId\": \"open\",\n  \"triggerWorkflow\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1632,
+        352
+      ],
+      "id": "d0d423fe-38a9-45be-82c9-0822049b23cf",
+      "name": "Crea la oportunidad",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "8rA8o2ZXOBugS3gi",
+          "name": "Escala Bearer Auth account"
+        },
+        "httpHeaderAuth": {
+          "id": "KKyjslJAGjjt3vHr",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "empty"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1408,
+        352
+      ],
+      "id": "8498e933-83dc-4eea-b156-43da58f5fa35",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "toRecipients": " investigacion.desarrollo@sulink.co",
+        "subject": "=Nueva oportunidad  {{ $('Escala trigger').item.json.empresa }}",
+        "bodyContent": "=Hola, la IA de Sulink ha detectado un nuevo interés.\nCliente: {{ $('Escala trigger').item.json.nombre }} {{ $('Escala trigger').item.json.apellido }} de {{ $('Escala trigger').item.json.empresa }}\nProducto: {{ $('Escala trigger').item.json.producto }}\nEl contacto ya ha sido registrado/actualizado en Escala. Por favor, validar para proceder con la cotización.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        352
+      ],
+      "id": "bbbfe182-7e51-4cb6-92cd-01ba87401029",
+      "name": "Send a message",
+      "webhookId": "467fb322-e100-44f2-a7d4-cd969cebe80d",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "jqfq8JYXXRlAH3J0",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Escala trigger": {
+      "main": [
+        [
+          {
+            "node": "Existe el Contacto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Crea el contacto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Existe el Contacto": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crea el contacto": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crea la oportunidad": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Crea la oportunidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "cdab6cdb-169b-4ef3-a23d-7649359d05ff",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2ce9be0c4de1e6cfc086e8050499c0556fde6a193c92b3bebe02c3593c9c486d"
+  },
+  "id": "uPyxCZBp9wHFF7yC",
+  "tags": []
+}

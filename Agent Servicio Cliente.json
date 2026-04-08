@@ -1,0 +1,325 @@
+{
+  "name": "Agent Servicio Cliente",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.subject }}{{ $json.bodyPreview }}",
+        "options": {
+          "systemMessage": "=# ROL Y OBJETIVO\nEres el Asesor Virtual de Servicio al Cliente de Sulink. Tu objetivo es clasificar los correos entrantes, dar respuestas técnicas precisas sobre nuestros productos de línea, e identificar cuándo una solicitud debe ser escalada al departamento de compras por ser un pedido personalizado.\n\n# TONO Y ESTILO\n- Profesional, técnico, amable y conciso.\n- Nunca inventes precios, tiempos de entrega o características que no estén explícitamente en este documento.\n- Si no sabes la respuesta, indica que un especialista revisará el caso.\n\n# REGLAS DE PRODUCTO\n\n## 1. Puertas Cortafuegos\n* **Medidas Estándar:** [Ej: 100x215 cm, 100x210 cm, 120x210 cm]\n* **Resistencia al Fuego (RF) Estándar:** [Ej: RF60, RF90, RF120]\n* **Regla de Personalización:** Si el cliente solicita una medida diferente a las estándar, un color específico fuera del catálogo básico, o un material distinto, la solicitud se clasifica como \"TAMAÑO PERSONALIZADO\".\n\n## 2. Pisos\n* **Tipos Estándar:** [Ej: Piso epóxico industrial, Piso de poliuretano]\n* **Tráfico Soportado:** [Ej: Tráfico medio, Tráfico pesado]\n* **Colores Estándar:** [Ej: Gris industrial, Azul, Verde]\n* **Regla de Personalización:** Si el cliente solicita formulaciones químicas especiales, colores corporativos exactos (Pantone), o resistencias extremas a químicos no listados, se clasifica como \"TAMAÑO PERSONALIZADO\".\n\n# REGLAS OPERATIVAS (FLUJO DE DECISIÓN)\n\n**Escenario A: Solicitud Estándar**\n- Si la solicitud encaja 100% en las características estándar:\n  1. Redacta una respuesta confirmando la disponibilidad de las especificaciones solicitadas.\n\n\n**Escenario B: Solicitud Personalizada (Requiere Compras)**\n- Si la solicitud incluye características fuera del estándar:\n  1. Redacta una respuesta al cliente informando que su requerimiento tiene especificaciones a medida y está siendo evaluado por el área técnica/compras para confirmar viabilidad.\n  2. PREPARA LA ALERTA: Extrae exactamente qué medida o característica es la que hace al pedido \"personalizado\" para enviarlo internamente.\n\n# EXTRACCIÓN DE DATOS PARA CRM (ESCALA)\nCuando el cliente proporcione sus datos, usa la herramienta de Escala trigger. Extrae el nombre, apellido cargo, empresa, (correo o teléfono) con precisión. Si el cliente no los ha dado, NO inventes nada, los unicos datos que son indispensable son el nombre, apellido, empresa y el correo o el telefono en su defecto. Si no hay teléfono, envía un texto vacío ''. Nunca envíes null.\nEn cada interacción, debes identificar y extraer la siguiente información del correo del cliente para actualizar nuestra base de datos:\n- Nombre del contacto:\n- Apellido del contacto:\n- Empresa:\n- Cargo:\n- telefono:\n- Producto de interés principal:\n- Cantidad del producto\n- Ciudad\n- Para que obra se necesita\n- Correo electrónico: es \n {{ $json.from }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        832,
+        0
+      ],
+      "id": "897e3fdf-e1d7-4a49-95b2-2644e31571d2",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        640,
+        192
+      ],
+      "id": "b446c3f3-2b56-4925-8c91-421c6ef5532d",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "8kHNwdqu8L2ARcWX",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.from }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        768,
+        192
+      ],
+      "id": "05e02127-8f38-4a05-8aab-bd40db0f39dc",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "toRecipients": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "bodyContent": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlookTool",
+      "typeVersion": 2,
+      "position": [
+        992,
+        208
+      ],
+      "id": "6eeec8e2-b3c7-45be-ab95-2995d27e3c77",
+      "name": "Send a message in Microsoft Outlook",
+      "webhookId": "b3ded822-8849-440c-8ec7-306db2948bbe",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "jqfq8JYXXRlAH3J0",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Herramienta para registrar prospectos en el CRM Escala. Úsala EXCLUSIVAMENTE cuando el cliente ya te haya proporcionado en la conversación su nombre, correo electrónico o teléfono, empresa, cargo. No inventes datos",
+        "workflowId": {
+          "__rl": true,
+          "value": "uPyxCZBp9wHFF7yC",
+          "mode": "list",
+          "cachedResultName": "My Sub-Workflow 1",
+          "cachedResultUrl": "/workflow/uPyxCZBp9wHFF7yC"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "telefono": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('telefono', ``, 'string') }}",
+            "nombre": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('nombre', ``, 'string') }}",
+            "apellido": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('apellido', ``, 'string') }}",
+            "empresa": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('empresa', ``, 'string') }}",
+            "cargo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('cargo', ``, 'string') }}",
+            "producto": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('producto', ``, 'string') }}",
+            "email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('email', ``, 'string') }}",
+            "cantidad": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('cantidad', ``, 'number') }}",
+            "ciudad": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('ciudad', ``, 'string') }}",
+            "obra": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('obra', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "nombre",
+              "displayName": "nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "apellido",
+              "displayName": "apellido",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "empresa",
+              "displayName": "empresa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "cargo",
+              "displayName": "cargo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "telefono",
+              "displayName": "telefono",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "producto",
+              "displayName": "producto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "ciudad",
+              "displayName": "ciudad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "obra",
+              "displayName": "obra",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "cantidad",
+              "displayName": "cantidad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1280,
+        208
+      ],
+      "id": "b0239c6a-04ee-4032-9586-a899f26c9e78",
+      "name": "Escala trigger"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "foldersToInclude": [
+            "AAMkADMzYWE4MzViLTU2ZWMtNDUwMC05NTM0LWFlMzJkNTFjNGZiNwAuAAAAAACGAUOtxU8nTb6gEqIrva34AQCAwp-HqOsxRLkInyp0abKUAABawZ4sAAA="
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -32
+      ],
+      "id": "07380b88-4abb-46c7-80c2-a9d9deb74a2b",
+      "name": "Microsoft Outlook Trigger",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "jqfq8JYXXRlAH3J0",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "Send a message in Microsoft Outlook": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escala trigger": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft Outlook Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8d5253c8-9edc-4981-adc3-7beb54290fb6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2ce9be0c4de1e6cfc086e8050499c0556fde6a193c92b3bebe02c3593c9c486d"
+  },
+  "id": "qbuHWnMZ3M49DwHM",
+  "tags": []
+}
